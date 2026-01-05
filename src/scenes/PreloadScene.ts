@@ -8,7 +8,7 @@ export class PreloadScene extends Phaser.Scene {
   }
 
   preload(): void {
-    // Asset loading goes here.
+    this.load.image('player', '/player.png');
   }
 
   create(): void {

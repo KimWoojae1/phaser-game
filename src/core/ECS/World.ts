@@ -42,6 +42,9 @@ export class World {
     if (system.setEventLevel) {
       system.setEventLevel(this.services.eventLevel);
     }
+    if (system.setScene) {
+      system.setScene(this.services.scene);
+    }
     this.systems.push(system);
     return this;
   }

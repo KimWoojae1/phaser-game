@@ -1,5 +1,9 @@
 import type { AABB } from '../physics/AABB';
 
-export type Collider = {
+export class Collider {
   bounds: AABB;
-};
+
+  constructor(init: { bounds: AABB }) {
+    this.bounds = init.bounds;
+  }
+}

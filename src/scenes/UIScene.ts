@@ -31,6 +31,14 @@ export class UIScene extends Phaser.Scene {
     levelText.setDepth(1000);
     levelText.setScrollFactor(0);
     levelText.setInteractive({ useHandCursor: true });
+    const debugText = this.add.text(10, 50, 'Debug: Colliders On');
+    debugText.setDepth(1000);
+    debugText.setScrollFactor(0);
+    debugText.setInteractive({ useHandCursor: true });
+    const centerText = this.add.text(10, 70, 'Debug: Centers Off');
+    centerText.setDepth(1000);
+    centerText.setScrollFactor(0);
+    centerText.setInteractive({ useHandCursor: true });
 
     const levels: Array<GameServices['eventLevel']> = [
       'debug',
@@ -52,6 +60,34 @@ export class UIScene extends Phaser.Scene {
       levelText.off('pointerdown', onLevelClick);
     };
 
+    const onDebugClick = () => {
+      services.debug.showColliders = !services.debug.showColliders;
+      debugText.setText(
+        `Debug: Colliders ${services.debug.showColliders ? 'On' : 'Off'}`
+      );
+    };
+    debugText.on('pointerdown', onDebugClick);
+    const unsubscribeDebugClick = () => {
+      debugText.off('pointerdown', onDebugClick);
+    };
+
+    const onCenterClick = () => {
+      services.debug.showCenters = !services.debug.showCenters;
+      centerText.setText(
+        `Debug: Centers ${services.debug.showCenters ? 'On' : 'Off'}`
+      );
+    };
+    centerText.on('pointerdown', onCenterClick);
+    const unsubscribeCenterClick = () => {
+      centerText.off('pointerdown', onCenterClick);
+    };
+
+    const prevUnsubscribe = this.unsubscribeLevelClick;
+    this.unsubscribeLevelClick = () => {
+      prevUnsubscribe?.();
+      unsubscribeDebugClick();
+      unsubscribeCenterClick();
+    };
   }
 
   override shutdown(): void {

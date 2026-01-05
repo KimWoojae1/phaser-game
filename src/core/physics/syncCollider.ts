@@ -5,6 +5,6 @@ export function syncColliderToTransform(
   transform: Transform,
   collider: Collider
 ): void {
-  collider.bounds.x = transform.x;
-  collider.bounds.y = transform.y;
+  collider.bounds.x = transform.x - collider.bounds.width / 2;
+  collider.bounds.y = transform.y - collider.bounds.height / 2;
 }

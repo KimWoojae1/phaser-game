@@ -1,3 +1,3 @@
-export type Component = Record<string, unknown>;
+export type Component = object;
 
-export type ComponentType<T extends Component> = new (...args: never[]) => T;
+export type ComponentType<T extends Component> = new (...args: any[]) => T;
