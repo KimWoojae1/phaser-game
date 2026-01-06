@@ -24,6 +24,24 @@ export type EventsMap = {
     frame: number;
     dt: number;
   };
+  collisionStart: {
+    a: Entity;
+    b: Entity;
+  } & EventMeta;
+  collisionStay: {
+    a: Entity;
+    b: Entity;
+  } & EventMeta;
+  collisionEnd: {
+    a: Entity;
+    b: Entity;
+  } & EventMeta;
+};
+
+type EventMeta = {
+  source: string;
+  sourceId: string;
+  level: 'debug' | 'info' | 'warn' | 'error';
 };
 
 const levelOrder = ['debug', 'info', 'warn', 'error'] as const;

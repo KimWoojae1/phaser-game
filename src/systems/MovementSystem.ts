@@ -20,6 +20,8 @@ export class MovementSystem implements System {
       if (!transform || !velocity) {
         continue;
       }
+      transform.prevX = transform.x;
+      transform.prevY = transform.y;
       const speedScale = world.getServices().dataStore.get('speedScale');
       const scale = typeof speedScale === 'number' ? speedScale : 1;
       transform.x += velocity.vx * dt * scale;

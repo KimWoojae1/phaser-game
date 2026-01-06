@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { Entity } from '../core/ECS/Entity';
 import { World } from '../core/ECS/World';
 import { Render } from '../core/components/Render';
 import {
@@ -121,28 +122,50 @@ export class GameScene extends Phaser.Scene {
         this.world.addEntity(trigger);
       }
     }
-    this.unsubscribeCollision = this.world.getEvents().on(
-      'collision',
+    const tintOn = (entity: Entity) => {
+      const render = entity.get(Render);
+      if (!render) {
+        return;
+      }
+      const object = render.object;
+      if (object instanceof Phaser.GameObjects.Rectangle) {
+        object.fillColor = 0xaa2233;
+      } else if (object instanceof Phaser.GameObjects.Sprite) {
+        object.setTint(0xaa2233);
+      }
+    };
+    const tintOff = (entity: Entity) => {
+      const render = entity.get(Render);
+      if (!render) {
+        return;
+      }
+      const object = render.object;
+      if (object instanceof Phaser.GameObjects.Rectangle) {
+        object.fillColor = 0x555555;
+      } else if (object instanceof Phaser.GameObjects.Sprite) {
+        object.clearTint();
+      }
+    };
+    const onStart = this.world.getEvents().on(
+      'collisionStart',
       (event) => {
-        const renderA = event.a.get(Render);
-        const renderB = event.b.get(Render);
-        const objects = [renderA?.object, renderB?.object];
-        for (const object of objects) {
-          if (object instanceof Phaser.GameObjects.Rectangle) {
-            object.fillColor = 0xaa2233;
-            this.time.delayedCall(100, () => {
-              object.fillColor = 0x555555;
-            });
-          } else if (object instanceof Phaser.GameObjects.Sprite) {
-            object.setTint(0xaa2233);
-            this.time.delayedCall(100, () => {
-              object.clearTint();
-            });
-          }
-        }
+        tintOn(event.a);
+        tintOn(event.b);
       },
       { level: 'debug' }
     );
+    const onEnd = this.world.getEvents().on(
+      'collisionEnd',
+      (event) => {
+        tintOff(event.a);
+        tintOff(event.b);
+      },
+      { level: 'debug' }
+    );
+    this.unsubscribeCollision = () => {
+      onStart();
+      onEnd();
+    };
     this.world.addSystem(new SyncColliderSystem());
     const collisionSystem = new CollisionSystem();
     collisionSystem.setBroadphase(new GridBroadphase(64));

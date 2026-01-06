@@ -14,12 +14,14 @@ export class CollisionSystem implements System {
     frame: 0,
     dt: 0,
   };
+  private lastPairs = new Set<string>();
 
   update(world: World, dt: number): void {
     const entities = Array.from(world.getEntities()).filter((entity) => {
       return entity.active && entity.has(Collider);
     });
 
+    const currentPairs = new Set<string>();
     const pairs = this.broadphase
       ? this.broadphase.getPairs(entities)
       : this.getAllPairs(entities);
@@ -30,6 +32,25 @@ export class CollisionSystem implements System {
         continue;
       }
       if (intersects(a.bounds, bCollider.bounds)) {
+        const pairId = this.getPairId(entityA, entityB);
+        currentPairs.add(pairId);
+        if (!this.lastPairs.has(pairId)) {
+          world.getEvents().emit('collisionStart', {
+            source: 'CollisionSystem',
+            sourceId: this.id,
+            level: this.level,
+            a: entityA,
+            b: entityB,
+          });
+        } else {
+          world.getEvents().emit('collisionStay', {
+            source: 'CollisionSystem',
+            sourceId: this.id,
+            level: this.level,
+            a: entityA,
+            b: entityB,
+          });
+        }
         const overlapX =
           Math.min(
             a.bounds.x + a.bounds.width,
@@ -69,6 +90,23 @@ export class CollisionSystem implements System {
         });
       }
     }
+    for (const pairId of this.lastPairs) {
+      if (!currentPairs.has(pairId)) {
+        const [aId, bId] = pairId.split('|').map((v) => Number(v));
+        const entityA = entities.find((e) => e.id === aId);
+        const entityB = entities.find((e) => e.id === bId);
+        if (entityA && entityB) {
+          world.getEvents().emit('collisionEnd', {
+            source: 'CollisionSystem',
+            sourceId: this.id,
+            level: this.level,
+            a: entityA,
+            b: entityB,
+          });
+        }
+      }
+    }
+    this.lastPairs = currentPairs;
   }
 
   setTimeSource(time: { now: number; frame: number; dt: number }): void {
@@ -91,5 +129,11 @@ export class CollisionSystem implements System {
       }
     }
     return pairs;
+  }
+
+  private getPairId(a: Entity, b: Entity): string {
+    const aId = a.id ?? 0;
+    const bId = b.id ?? 0;
+    return aId < bId ? `${aId}|${bId}` : `${bId}|${aId}`;
   }
 }

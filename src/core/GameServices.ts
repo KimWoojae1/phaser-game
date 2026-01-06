@@ -33,6 +33,9 @@ export class GameServices {
     height: 600,
     zoom: 1,
   };
+  public readonly collision = {
+    resolveIterations: 2,
+  };
   public readonly debug = {
     showColliders: true,
     showCenters: false,

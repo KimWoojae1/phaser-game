@@ -1,6 +1,8 @@
 export class Transform {
   x: number;
   y: number;
+  prevX: number;
+  prevY: number;
   rotation: number;
   scaleX: number;
   scaleY: number;
@@ -14,6 +16,8 @@ export class Transform {
   }) {
     this.x = init.x;
     this.y = init.y;
+    this.prevX = init.x;
+    this.prevY = init.y;
     this.rotation = init.rotation ?? 0;
     this.scaleX = init.scaleX ?? 1;
     this.scaleY = init.scaleY ?? 1;
