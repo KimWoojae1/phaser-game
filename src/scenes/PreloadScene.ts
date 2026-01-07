@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { GameServices } from '../core/GameServices';
 import { World } from '../core/ECS/World';
+import { AssetLoader } from '../core/assets/AssetLoader';
 import { LoadingUI } from '../ui/LoadingUI';
 
 export class PreloadScene extends Phaser.Scene {
@@ -14,7 +15,15 @@ export class PreloadScene extends Phaser.Scene {
     this.load.image('loading', '/loading.svg');
     this.loadingUI = new LoadingUI(this);
     this.loadingUI.setup();
-    this.load.image('player', '/player.png');
+    const loader = new AssetLoader(this);
+    loader.loadImage('player', '/assets/player.png');
+    loader.loadImage('enemy', '/assets/enemy.png');
+    loader.loadSpine(
+      'gas_zombie',
+      '/assets/gas_zombie.json',
+      '/assets/gas_zombie.atlas'
+    );
+    this.load.json('stage', '/assets/stage.json');
   }
 
   create(): void {
@@ -23,6 +32,14 @@ export class PreloadScene extends Phaser.Scene {
       this.loadingUI = undefined;
     };
     const { world } = this.initServices();
+    const stageData = this.cache.json.get('stage') as
+      | { id: string; entities: unknown[] }
+      | undefined;
+    if (stageData && stageData.entities) {
+      world.getServices().stageManager.setRuntimeStage(
+        stageData as unknown as { id: string; entities: any[] }
+      );
+    }
     this.time.delayedCall(800, () => {
       cleanup();
       this.scene.start('Game');

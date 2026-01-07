@@ -17,6 +17,7 @@ export class DebugSystem implements System {
     }
     if (!this.graphics) {
       this.graphics = this.scene.add.graphics();
+      this.graphics.setDepth(9999);
     }
     const debug = world.getServices().debug;
     this.graphics.clear();

@@ -1,5 +1,6 @@
 import type { System } from '../core/ECS/System';
 import type { World } from '../core/ECS/World';
+import { Controlled } from '../core/components/Controlled';
 import { MoveConfig } from '../core/components/MoveConfig';
 import { Tag } from '../core/components/Tag';
 import { Velocity } from '../core/components/Velocity';
@@ -38,7 +39,11 @@ export class PlayerControlSystem implements System {
       const tag = entity.get(Tag);
       const velocity = entity.get(Velocity);
       const config = entity.get(MoveConfig);
-      if (!tag || !velocity || tag.value !== 'player') {
+      const controlled = entity.get(Controlled);
+      if (!tag || !velocity || tag.value !== 'Player') {
+        continue;
+      }
+      if (controlled && !controlled.enabled) {
         continue;
       }
       const maxSpeed = (config?.maxSpeed ?? speed) * speedScale;

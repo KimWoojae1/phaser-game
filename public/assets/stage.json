@@ -1,0 +1,54 @@
+{
+  "id": "prototype",
+  "entities": [
+    {
+      "type": "player",
+      "x": 160,
+      "y": 240,
+      "render": "sprite",
+      "key": "player",
+      "scale": 0.7,
+      "origin": { "x": 0.5, "y": 1.0 },
+      "tag": "Player",
+      "collidesWith": ["Enemy"],
+      "controlled": true
+    },
+    {
+      "type": "player",
+      "x": 120,
+      "y": 520,
+      "render": "sprite",
+      "key": "player",
+      "scale": 0.7,
+      "origin": { "x": 0.5, "y": 1.0 },
+      "tag": "Player",
+      "collidesWith": ["Enemy"],
+      "controlled": false
+    },
+    {
+      "type": "enemy",
+      "x": 420,
+      "y": 260,
+      "render": "spine",
+      "key": "gas_zombie",
+      "animation": "zombie_idle",
+      "scale": 0.7,
+      "origin": { "x": 0.5, "y": 1.0 },
+      "collider": { "width": 100, "height": 100 },
+      "tag": "Enemy",
+      "collidesWith": ["Player"]
+    }
+    ,
+    {
+      "type": "enemy",
+      "x": 520,
+      "y": 320,
+      "render": "sprite",
+      "key": "enemy",
+      "scale": 0.7,
+      "origin": { "x": 0.5, "y": 1.0 },
+      "tag": "Enemy",
+      "collidesWith": ["Player"]
+    }
+  ]
+}

@@ -2,6 +2,7 @@ import type { System } from '../core/ECS/System';
 import type { World } from '../core/ECS/World';
 import type { Entity } from '../core/ECS/Entity';
 import { Collider } from '../core/components/Collider';
+import { Tag } from '../core/components/Tag';
 import { intersects } from '../core/physics/Collision';
 import type { Broadphase } from '../core/physics/Broadphase';
 
@@ -29,6 +30,11 @@ export class CollisionSystem implements System {
       const a = entityA.get(Collider);
       const bCollider = entityB.get(Collider);
       if (!a || !bCollider) {
+        continue;
+      }
+      const tagA = entityA.get(Tag);
+      const tagB = entityB.get(Tag);
+      if (!this.canCollide(tagA, tagB)) {
         continue;
       }
       if (intersects(a.bounds, bCollider.bounds)) {
@@ -135,5 +141,18 @@ export class CollisionSystem implements System {
     const aId = a.id ?? 0;
     const bId = b.id ?? 0;
     return aId < bId ? `${aId}|${bId}` : `${bId}|${aId}`;
+  }
+
+  private canCollide(tagA?: Tag, tagB?: Tag): boolean {
+    if (!tagA || !tagB) {
+      return false;
+    }
+    if (tagA.value === 'None' || tagB.value === 'None') {
+      return false;
+    }
+    return (
+      tagA.collidesWith.includes(tagB.value) ||
+      tagB.collidesWith.includes(tagA.value)
+    );
   }
 }

@@ -16,19 +16,50 @@ export class GridBroadphase implements Broadphase {
       if (!collider) {
         continue;
       }
-      const cellX = Math.floor(collider.bounds.x / this.cellSize);
-      const cellY = Math.floor(collider.bounds.y / this.cellSize);
-      const key = `${cellX},${cellY}`;
-      const list = buckets.get(key) ?? [];
-      list.push(entity);
-      buckets.set(key, list);
+      const minCellX = Math.floor(collider.bounds.x / this.cellSize);
+      const minCellY = Math.floor(collider.bounds.y / this.cellSize);
+      const maxCellX = Math.floor(
+        (collider.bounds.x + collider.bounds.width) / this.cellSize
+      );
+      const maxCellY = Math.floor(
+        (collider.bounds.y + collider.bounds.height) / this.cellSize
+      );
+      for (let cellX = minCellX; cellX <= maxCellX; cellX += 1) {
+        for (let cellY = minCellY; cellY <= maxCellY; cellY += 1) {
+          const key = `${cellX},${cellY}`;
+          const list = buckets.get(key) ?? [];
+          list.push(entity);
+          buckets.set(key, list);
+        }
+      }
     }
 
     const pairs: Array<[Entity, Entity]> = [];
-    for (const bucket of buckets.values()) {
-      for (let i = 0; i < bucket.length; i += 1) {
-        for (let j = i + 1; j < bucket.length; j += 1) {
-          pairs.push([bucket[i], bucket[j]]);
+    const visited = new Set<string>();
+    for (const [key, bucket] of buckets.entries()) {
+      const [baseX, baseY] = key.split(',').map((value) => Number(value));
+      for (let ox = -1; ox <= 1; ox += 1) {
+        for (let oy = -1; oy <= 1; oy += 1) {
+          const neighborKey = `${baseX + ox},${baseY + oy}`;
+          const neighbor = buckets.get(neighborKey);
+          if (!neighbor) {
+            continue;
+          }
+          for (const a of bucket) {
+            for (const b of neighbor) {
+              if (a === b) {
+                continue;
+              }
+              const idA = a.id ?? 0;
+              const idB = b.id ?? 0;
+              const pairKey = idA < idB ? `${idA}|${idB}` : `${idB}|${idA}`;
+              if (visited.has(pairKey)) {
+                continue;
+              }
+              visited.add(pairKey);
+              pairs.push([a, b]);
+            }
+          }
         }
       }
     }

@@ -12,6 +12,14 @@ export class BootScene extends Phaser.Scene {
     const world = new World({ services });
     this.registry.set('services', services);
     this.registry.set('world', world);
+    const hasSpine =
+      typeof (this.load as unknown as { spineJson?: Function }).spineJson ===
+        'function' &&
+      typeof (this.load as unknown as { spineAtlas?: Function }).spineAtlas ===
+        'function';
+    if (!hasSpine) {
+      console.warn('Spine loader not found on scene.load.spineJson/Atlas');
+    }
     this.scene.start('Preload');
   }
 }

@@ -2,18 +2,22 @@ import Phaser from 'phaser';
 import { Entity } from '../core/ECS/Entity';
 import { World } from '../core/ECS/World';
 import { Render } from '../core/components/Render';
+import { Tag } from '../core/components/Tag';
 import {
   createItem,
   createNpc,
-  createTestPlayer,
   createTrigger,
   createWall,
 } from '../entities/factories';
+import { Enemy } from '../entities/Enemy';
+import { Player } from '../entities/Player';
+import { entityDefaults } from '../data/entityDefaults';
 import { GameServices } from '../core/GameServices';
 import { CollisionSystem } from '../systems/CollisionSystem';
 import { CollisionResponseSystem } from '../systems/CollisionResponseSystem';
 import { CameraSystem } from '../systems/CameraSystem';
 import { DebugSystem } from '../systems/DebugSystem';
+import { DepthSortSystem } from '../systems/DepthSortSystem';
 import { InputSystem } from '../systems/InputSystem';
 import { PlayerControlSystem } from '../systems/PlayerControlSystem';
 import { MovementSystem } from '../systems/MovementSystem';
@@ -58,9 +62,14 @@ export class GameScene extends Phaser.Scene {
     this.world.addSystem(inputSystem);
     this.world.addSystem(new PlayerControlSystem());
     this.world.addSystem(new MovementSystem());
+    this.world.addSystem(new SyncColliderSystem());
+    const collisionSystem = new CollisionSystem();
+    collisionSystem.setBroadphase(new GridBroadphase(64));
+    this.world.addSystem(collisionSystem);
+    this.world.addSystem(new CollisionResponseSystem());
     this.world.addSystem(new CameraSystem());
     this.world.addSystem(new DebugSystem());
-    this.world.addSystem(new CollisionResponseSystem());
+    this.world.addSystem(new DepthSortSystem());
 
     if (!this.textures.exists('player')) {
       const graphics = this.add.graphics();
@@ -73,12 +82,77 @@ export class GameScene extends Phaser.Scene {
     const stage = services.stageManager.getCurrent();
     for (const entity of stage.entities) {
       if (entity.type === 'player') {
-        const player = createTestPlayer(
-          entity.x,
-          entity.y,
-          entity.spriteKey ?? 'player'
-        );
+        const defaults = entityDefaults.player;
+        const renderType = entity.render ?? defaults.render;
+        const renderKey =
+          entity.key ??
+          (renderType === 'spine'
+            ? entity.spineKey ?? defaults.key
+            : entity.spriteKey ?? defaults.key);
+        const collider =
+          entity.collider ??
+          this.resolveDefaultCollider(renderType, renderKey, entity.size ?? 32);
+        const player = new Player({
+          x: entity.x,
+          y: entity.y,
+          size: entity.size ?? 32,
+          scale: entity.scale,
+          render: renderType,
+          key: renderKey,
+          animation: entity.animation ?? defaults.animation,
+          loop: true,
+          atlasKey: entity.spineAtlasKey,
+          origin: entity.origin,
+          collider,
+          controlled: entity.controlled,
+          spineScale: entity.spineScale,
+          spineOffsetX: entity.spineOffsetX,
+          spineOffsetY: entity.spineOffsetY,
+        });
+        const playerTag = player.get(Tag);
+        if (playerTag && entity.tag) {
+          playerTag.value = entity.tag;
+        }
+        if (playerTag && entity.collidesWith) {
+          playerTag.collidesWith = entity.collidesWith;
+        }
         this.world.addEntity(player);
+      }
+      if (entity.type === 'enemy') {
+        const defaults = entityDefaults.enemy;
+        const renderType = entity.render ?? defaults.render;
+        const renderKey =
+          entity.key ??
+          (renderType === 'spine'
+            ? entity.spineKey ?? defaults.key
+            : entity.spriteKey ?? defaults.key);
+        const collider =
+          entity.collider ??
+          this.resolveDefaultCollider(renderType, renderKey, entity.size ?? 32);
+        const enemy = new Enemy({
+          x: entity.x,
+          y: entity.y,
+          size: entity.size ?? 32,
+          scale: entity.scale,
+          render: renderType,
+          key: renderKey,
+          animation: entity.animation ?? defaults.animation,
+          loop: true,
+          atlasKey: entity.spineAtlasKey,
+          origin: entity.origin,
+          collider,
+          spineScale: entity.spineScale,
+          spineOffsetX: entity.spineOffsetX,
+          spineOffsetY: entity.spineOffsetY,
+        });
+        const enemyTag = enemy.get(Tag);
+        if (enemyTag && entity.tag) {
+          enemyTag.value = entity.tag;
+        }
+        if (enemyTag && entity.collidesWith) {
+          enemyTag.collidesWith = entity.collidesWith;
+        }
+        this.world.addEntity(enemy);
       }
       if (entity.type === 'wall') {
         const wall = createWall(
@@ -166,10 +240,6 @@ export class GameScene extends Phaser.Scene {
       onStart();
       onEnd();
     };
-    this.world.addSystem(new SyncColliderSystem());
-    const collisionSystem = new CollisionSystem();
-    collisionSystem.setBroadphase(new GridBroadphase(64));
-    this.world.addSystem(collisionSystem);
     this.world.addSystem(new RenderSystem());
     this.scene.launch('UI');
   }
@@ -183,4 +253,21 @@ export class GameScene extends Phaser.Scene {
     this.world.update(dt);
   }
 
+  private resolveDefaultCollider(
+    renderType: 'sprite' | 'spine',
+    key: string,
+    fallbackSize: number
+  ): { width: number; height: number } {
+    if (renderType === 'spine') {
+      return { width: 100, height: 100 };
+    }
+    const texture = this.textures.get(key);
+    const source = texture?.getSourceImage() as
+      | { width: number; height: number }
+      | undefined;
+    if (source?.width && source?.height) {
+      return { width: source.width, height: source.height };
+    }
+    return { width: fallbackSize, height: fallbackSize };
+  }
 }
