@@ -8,19 +8,22 @@ body,
 
 body {
   margin: 0;
-  background:
-    radial-gradient(circle at 20% 20%, #1b242a, #0e1418 60%),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(0deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-  background-size: auto, 40px 40px, 40px 40px;
+  background: url("/assets/bg-tile.png") repeat;
+  background-size: 512px 512px;
 }
 
 #app {
   position: fixed;
   inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: block;
+}
+
+#app canvas {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  margin: 0;
 }
 
 canvas {
